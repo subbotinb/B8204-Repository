@@ -5,122 +5,187 @@
 
 using namespace std;
 
-struct Vector
+class Stack
 {
-	static const int DEFAULT_STACK_CAPACITY = 5;
-	int capacity; // Вместимость
-	int size; // Текущее количество элементов
-	unsigned int head; // Положение элемента головы
-	unsigned int *V; // Массив
+public:
+	Stack(int capacity = DEFAULT_STACK_CAPACITY); // Конструктор стека
+	~Stack(); // Деструктор стека
+	friend ostream& operator<<(ostream& os, const Stack &stack); // Вывод информации о стеке на экран
+	int getCapacity() const; // Возвращает текущую вмстимость стека
+	int push(int element); // Добавляет элемент в стек и возвращает значение этого элемента
+	void pop(); // Удаляет элемент стека
+
+private:
+	static const int DEFAULT_STACK_CAPACITY = 5; // Стандартный размер стека
+	int *capacity; // Вместимость стека
+	int *size; // Текущее количество элементов стека
+	unsigned int *head; // Положение элемента головы стека
+	unsigned int *V; // Стек
+	int getSize() const; // Возвращает текущее количество элементов в стеке
+	int getHead() const; // Возвращает индекс головного элемента
+	int getIndex(int i = 0) const; // Возвращает i-ый индекс стека относительно его головного элемента
+	void setSize(int n); // Задает значение количества элементов стека
+	void setHead(int n); // Задает значение головного элемента стека
+	void setCapacity(int n); // Задает значение вместимости стека
+	bool isEmpty() const; // Проверяет стек на пустоту
+	bool isFull() const; // Проверяет стек на заполненность
+	void circularShiftRight(); // Циклический сдвиг стека вправо
+	void circularShiftLeft(); // Циклический сдвиг стека влево
+	void expand(); // Увеличивает вместимость стека в два раза
+	void narrow(); // Уменьшает вместимость стека в два раза
 };
 
-Vector newVector(int capacity = 5) // На вход подается вместимость вектора. Возвращает вектор с инициализированными полями
+Stack::Stack(int capacity)
 {
-	Vector vector;
-	vector.capacity = capacity;
-	vector.head = (capacity - 1) / 2;
-	vector.size = 0;
-	vector.V = new unsigned int[capacity];
-	return vector;
+	this->capacity = new int(capacity);
+	this->head = new unsigned int((capacity - 1) / 2);
+	this->size = new int(0);
+	this->V = new unsigned int[capacity];
 }
 
-bool vectorEmpty(const Vector &vector) // Проверяет вектор на пустоту
+Stack::~Stack()
 {
-	return vector.size == 0 ? true : false;
+	delete this->capacity;
+	delete this->head;
+	delete this->size;
+	delete[] this->V;
 }
 
-bool vectorFull(const Vector &vector) // Проверяет вектор на заполненность
+int Stack::getCapacity() const
 {
-	return vector.size == vector.capacity ? true : false;
+	return *this->capacity;
 }
 
-int vectorGetIndex(const Vector &vector, int delta = 0, int iterator = 0) // Преобразовывает индекс массива в индекс вектора относительно его начала, возвращает начальный элемент если параметры = 0
+int Stack::getSize() const
 {
-	return (iterator + vector.head + delta) % vector.capacity;
+	return *this->size;
 }
 
-void vectorCircularShiftRight(Vector &vector) // Циклический сдвиг вектора вправо
+int Stack::getHead() const
 {
-	int tmp = vector.V[vectorGetIndex(vector, -1)];
-	for (int i = vector.capacity - 2; i >= 0; i--)
-		vector.V[vectorGetIndex(vector, 1, i)] = vector.V[vectorGetIndex(vector, 0, i)];
-	vector.V[vectorGetIndex(vector)] = tmp;
+	return *this->head;
 }
 
-void vectorCircularShiftLeft(Vector &vector) // Циклический сдвиг вектора влево
+bool Stack::isEmpty() const
 {
-	int tmp = vector.V[vectorGetIndex(vector, vector.capacity)];
-	for (int i = 0; i < vector.capacity - 1; i++)
-		vector.V[vectorGetIndex(vector, 0, i)] = vector.V[vectorGetIndex(vector, 1, i)];
-	vector.V[vectorGetIndex(vector, vector.capacity - 1)] = tmp;
+	return this->getSize() == 0 ? true : false;
 }
 
-ostream& operator<<(ostream& os, const Vector& vector) // Вывод вектора
+int Stack::getIndex(int i) const
 {
-		cout << "Вместимость стека: " << vector.capacity << endl;
-		cout << "Количество элементов в стеке: " << vector.size << endl;
-		cout << "Индекс начального элемента вектора: " << vector.head << endl;
-	if (!vectorEmpty(vector))
+	return (this->getHead() + i) % this->getCapacity();
+}
+
+void Stack::setSize(int n)
+{
+	*this->size = n;
+}
+
+void Stack::setHead(int n)
+{
+	*this->head = n;
+}
+
+void Stack::setCapacity(int n)
+{
+	*this->capacity = n;
+}
+
+bool Stack::isFull() const
+{
+	return this->getSize() == this->getCapacity() ? true : false;
+}
+
+void Stack::circularShiftRight()
+{
+	int tmp = this->V[this->getIndex(-1)];
+	for (int i = this->getCapacity() - 2; i >= 0; i--)
+		this->V[this->getIndex(i + 1)] = this->V[this->getIndex(i)];
+	this->V[this->getIndex()] = tmp;
+}
+
+void Stack::circularShiftLeft()
+{
+	int tmp = this->V[this->getIndex(this->getCapacity())];
+	for (int i = 0; i < this->getCapacity() - 1; i++)
+		this->V[this->getIndex(i)] = this->V[this->getIndex(i + 1)];
+	this->V[this->getIndex(this->getCapacity() - 1)] = tmp;
+}
+
+ostream& operator<<(ostream& os, const Stack &stack)
+{
+		cout << "Вместимость стека: " << stack.getCapacity() << endl;
+		cout << "Количество элементов в стеке: " << stack.getSize() << endl;
+	if (!stack.isEmpty())
 	{
-		for (int i = 0; i < vector.size; i++)
-			os << vector.V[(i + vector.head) % vector.capacity] << " ";
+		cout << "Индекс начального элемента вектора: " << stack.getHead() << endl;
+		for (int i = 0; i < stack.getSize(); i++)
+			os << stack.V[stack.getIndex(i)] << " ";
 		os << endl;
 	}
 	return os;
 }
 
-void vectorExpand(Vector &vector) // Увеличение вместимости вектора
+void Stack::expand()
 {
-	Vector tmp = newVector(vector.capacity * 2);
-	for (int i = 0; i < vector.size; i++)
-		tmp.V[vectorGetIndex(tmp, 0, i)] = vector.V[vectorGetIndex(vector, 0, i)];
-	delete[] vector.V;
-	vector.capacity = tmp.capacity;
-	vector.head = tmp.head;
-	vector.V = tmp.V;
+	Stack tmp(this->getCapacity()*2);
+	for (int i = 0; i < this->getSize(); i++)
+		tmp.V[tmp.getIndex(i)] = this->V[this->getIndex(i)];
+	tmp.setSize(this->getSize());
+	delete[] this->V;
+	this->setCapacity(tmp.getCapacity());
+	this->setHead(tmp.getHead());
+	this->V = new unsigned int[this->getCapacity()];
+	for (int i = 0; i < tmp.getSize(); i++)
+		this->V[this->getIndex(i)] = tmp.V[this->getIndex(i)];
 }
 
-void vectorNarrow(Vector &vector) // Уменьшение вместимости вектора
+void Stack::narrow()
 {	
-	int capacity;
-	vector.capacity > vector.DEFAULT_STACK_CAPACITY ? capacity = vector.capacity / 2 : capacity = vector.capacity;
-	Vector tmp = newVector(capacity);
-	for (int i = 0; i < vector.size; i++)
-		tmp.V[vectorGetIndex(tmp, 0, i)] = vector.V[vectorGetIndex(vector, 0, i)];
-	delete[] vector.V;
-	vector.capacity = tmp.capacity;
-	vector.head = tmp.head;
-	vector.V = tmp.V;
+	Stack tmp(this->getCapacity() / 2);
+	for (int i = 0; i < this->getSize(); i++)
+		tmp.V[tmp.getIndex(i)] = this->V[this->getIndex(i)];
+	tmp.setSize(this->getSize());
+	delete[] this->V;
+	this->setCapacity(tmp.getCapacity());
+	this->setHead(tmp.getHead());
+	this->V = new unsigned int[this->getCapacity()];
+	for (int i = 0; i < tmp.getSize(); i++)
+		this->V[this->getIndex(i)] = tmp.V[this->getIndex(i)];
 }
 
-int vectorPush(Vector &vector, int element) // Добавление элемента
+int Stack::push(int element)
 {
-	if (vectorFull(vector))
-		vectorExpand(vector);
-	if (!vectorEmpty(vector))
-		vectorCircularShiftRight(vector);
-	vector.V[vectorGetIndex(vector)] = element;
-	vector.size++;
+	if (this->isFull())
+		this->expand();
+	if (!this->isEmpty())
+		this->circularShiftRight();
+	this->V[this->getIndex()] = element;
+	this->setSize(this->getSize() + 1);
 	return element;
 }
 
-void vectorPop(Vector &vector) // Удаление элемента
+void Stack::pop()
 {
-	if (!vectorEmpty(vector))
-		vectorCircularShiftLeft(vector);
-	vector.size--;
-	if ((vector.size != 0) && (vector.capacity / vector.size == 2))
-		vectorNarrow(vector);
+	if (!this->isEmpty()) {
+		this->circularShiftLeft();
+		this->setSize(this->getSize() - 1);
+		if ((this->getSize() != 0) && (this->getCapacity() / this->getSize() == 2))
+			this->narrow();
+	}
 }
 
 int main()
 {
 	setlocale(LC_ALL, "Russian");
 
-	Vector vector = newVector();
-	for (int i = 0; i < 10; i++)
-		vectorPush(vector, i + 1);
-	cout << vector;
+	Stack stack;
+	for (int i = 0; i < 5; i++)
+		stack.push(i + 1);
+	stack.push(6);
+	cout << stack << endl;
+	stack.pop();
+	cout << stack;
 	system("pause");
 	return 0;
 }
